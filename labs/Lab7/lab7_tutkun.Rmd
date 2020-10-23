@@ -1,0 +1,298 @@
+---
+title: "Lab7"
+author: "Alp Tutkun"
+date: "3/28/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+### Coding principles
+
+### Linear regression
+```{r}
+#make up some data
+x <- rnorm(100)
+y <- 2 * x + 3 + rnorm(length(x))
+plot(x, y)
+```
+
+step 1. formulate model using lm()
+```{r}
+mylm <- lm(y~x)
+```
+
+step 2: check assumptions
+-linearity
+-homoscedasticity
+-normally distributed residuals
+```{r}
+#2x2 plotting window
+par(mfrow=c(2,2))
+plot(mylm)
+```
+
+```{r}
+shapiro.test(mylm$residuals)
+```
+
+check for indep of resid
+```{r}
+par(mfrow=c(1,1))
+acf(mylm$residuals)
+```
+
+step 3. getting summary of model
+```{r}
+summary(mylm)
+```
+
+challenge q 1, q1 on bb
+```{r}
+y <- exp(2*x)+3+rnorm(100)
+mylm <- lm(y~x)
+par(mfrow=c(2,2))
+plot(mylm)
+shapiro.test(mylm$residuals)
+par(mfrow=c(1,1))
+acf(mylm$residuals)
+```
+
+q2 bb
+```{r}
+y <- 2*diffinv(x[1:99])+3+rnorm(100)
+plot(y)
+plot(x,y)
+mylm <- lm(y~x)
+par(mfrow=c(2,2))
+plot(mylm)
+shapiro.test(mylm$residuals)
+par(mfrow=c(1,1))
+acf(mylm$residuals)
+```
+
+### reset
+```{r}
+x <- rnorm(100)
+y <- 2*x+3+rnorm(100)
+mylm <- lm(y~x)
+```
+
+step4: get coefficients
+```{r}
+coef(mylm)
+confint(mylm)
+```
+
+step 5. predict linear model
+```{r}
+newx <- data.frame(x=-5:5)
+my.predict <- predict(mylm,newdata=newx,interval="conf")
+plot(x,y,xlim=c(-5,5),ylim=c(-8,14))
+lines(newx$x,my.predict[,"fit"],col="red")
+lines(newx$x,my.predict[,"lwr"],col="red",lty=2)
+lines(newx$x,my.predict[,"upr"],col="red",lty=2)
+```
+
+### correlation
+
+correlation of multiple vars at once
+```{r}
+z <- rnorm(100)
+mycor <- data.frame(x,y,z)
+cor(mycor)
+pairs(mycor)
+```
+
+multiple regression
+```{r}
+summary(lm(y~x+z,data=mycor))
+```
+
+merge data frames
+```{r}
+dat1 <- data.frame(Year=2000:2010,temp=c(rnorm(10),0))
+dat2 <- data.frame(Year=1999:2006,co2=c(rnorm(7),0)) 
+merge(dat1,dat2)
+merge(dat1,dat2,all.x=TRUE)
+merge(dat1,dat2,by.x=2,by.y=2)
+```
+
+### activities
+
+### task1 : data wrangling
+
+```{r}
+#load data
+co2 <- read.table("lab_co2.txt",header=TRUE)
+temp <- read.csv("lab_temp.csv")
+pop <- read.csv("lab_population.csv")
+```
+
+1. use str(), range()
+
+```{r}
+str(co2)
+range(co2$year)
+str(temp)
+range(temp$Year)
+str(pop)
+range(pop$year)
+```
+
+2. reshape to change the temp df to wide
+```{r}
+#we want column for year, month, temp
+head(temp)
+temp.long <- reshape(temp, varying = list(2:13), idvar = "Year", direction = "long")
+colnames(temp.long) <- c("year", "month", "temp")
+rownames(temp.long) <- c()
+head(temp.long)
+co2.agg.month <- aggregate(ppm~year+month,FUN=mean,data=co2)
+reshape(co2.agg.month, timevar="month", v.names="ppm", idvar="year", direction="wide")
+```
+
+3.
+```{r}
+temp.agg <- aggregate(temp~year,FUN=mean,data=temp.long)
+co2.agg <- aggregate(ppm~year,FUN=mean,data=co2)
+pop.agg <- aggregate(popsize~year,FUN=mean,data=pop)
+```
+
+4.
+```{r}
+merged <- merge(co2.agg,temp.agg,by="year")
+merged <- merge(merged,pop.agg,by="year")
+```
+
+## Task 2: predictions
+
+```{r}
+par(mfrow=c(3,1))
+plot(temp~year,data=temp.agg)
+plot(ppm~year,data=co2.agg)
+plot(popsize~year,data=pop.agg)
+```
+
+3.
+```{r}
+mod.lm.temp <- lm(temp~year,data=temp.agg)
+mod.lm.co2 <- lm(ppm~year,data=co2.agg)
+mod.lm.pop <- lm(popsize~year,data=pop.agg)
+```
+
+4. check assumptions
+-linear relationship
+-normally distributed and independent residuals
+-homoscedasticity = uniform variance
+use qqnorm and qqline
+```{r}
+qqnorm(mod.lm.temp$residuals,main="raw temperature")
+qqline(mod.lm.temp$residuals,col="red")
+
+qqnorm(mod.lm.co2$residuals,main="raw emissions")
+qqline(mod.lm.co2$residuals,col="red")
+
+qqnorm(mod.lm.pop$residuals,main="raw population")
+qqline(mod.lm.pop$residuals,col="red")
+```
+
+log 10 transform
+
+```{r}
+mod.lm.ltemp <- lm(log10(temp)~year,data=temp.agg)
+mod.lm.lco2 <- lm(log10(ppm)~year,data=co2.agg)
+mod.lm.lpop <- lm(log10(popsize)~year,data=pop.agg)
+
+qqnorm(mod.lm.ltemp$residuals,main="log temperature")
+qqline(mod.lm.ltemp$residuals,col="red")
+
+qqnorm(mod.lm.lco2$residuals,main="log emissions")
+qqline(mod.lm.lco2$residuals,col="red")
+
+qqnorm(mod.lm.lpop$residuals,main="log population")
+qqline(mod.lm.lpop$residuals,col="red")
+```
+
+7. go with raw data as log transform didnt change much
+
+```{r}
+summary(mod.lm.temp)
+summary(mod.lm.co2)
+summary(mod.lm.pop)
+```
+
+9. predict()
+```{r}
+newdata <- data.frame(year=seq(from=1880, to=2050,by=1))
+#predict responses
+pred.temp <- predict(mod.lm.temp,newdata=newdata,interval="conf")
+pred.co2 <- predict(mod.lm.co2,newdata=newdata,interval="conf")
+pred.pop <- predict(mod.lm.pop,newdata=newdata,interval="conf")
+```
+
+10.
+```{r}
+#temperature
+plot(temp.agg$year,temp.agg$temp,xlim=c(min(temp.agg$year),2050),ylim=c(13.4,15.1),xlab="Year",ylab=expression(paste("temperature(",degree,"C)")))
+lines(newdata$year,pred.temp[,"fit"], col="red",lty=1,lwd=2)
+lines(newdata$year,pred.temp[,"upr"], col="red",lty=1,lwd=1)
+lines(newdata$year,pred.temp[,"lwr"], col="red",lty=1,lwd=1)
+#emissions
+plot(co2.agg$year,co2.agg$ppm,xlim=c(min(co2.agg$year),2050),ylim=c(200,500),xlab="Year",ylab=expression(paste("co2(",degree,"C)")))
+lines(newdata$year,pred.co2[,"fit"], col="red",lty=1,lwd=2)
+lines(newdata$year,pred.co2[,"upr"], col="red",lty=1,lwd=1)
+lines(newdata$year,pred.co2[,"lwr"], col="red",lty=1,lwd=1)
+
+#pop
+plot(pop.agg$year,pop.agg$popsize,xlim=c(min(pop.agg$year),2050),ylim=c(2.1e9,1e10),xlab="Year",ylab=expression(paste("pop size(",degree,"C)")))
+lines(newdata$year,pred.pop[,"fit"], col="red",lty=1,lwd=2)
+lines(newdata$year,pred.pop[,"upr"], col="red",lty=1,lwd=1)
+lines(newdata$year,pred.pop[,"lwr"], col="red",lty=1,lwd=1)
+```
+
+11.
+```{r}
+tail(pred.pop)
+```
+
+
+## task 2: cause and effect
+1.use cor()
+```{r}
+cor(merged)
+pairs(merged)
+```
+
+```{r}
+lmerged <- lm(temp~ppm+popsize+year,data=merged)
+summary(lmerged)
+summary(mod.lm.temp)
+summary(mod.lm.co2)
+summary(mod.lm.pop)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

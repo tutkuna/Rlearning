@@ -1,0 +1,166 @@
+---
+title: "Lab 2"
+author: "Alp Tutkun"
+date: "1/24/20"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+## Plotting
+get data
+```{r}
+getwd()
+d1 <- read.csv("sick_dataset1.csv") 
+str(d1)
+```
+subset
+```{r}
+data("chickwts")
+str(chickwts)
+#get one column
+subset(chickwts,select=("feed"))
+#or
+chickwts$feed
+#reorder cols
+subset(chickwts,select=c("feed","weight"))
+#select rows based on a logical
+subset(chickwts,subset=feed=="casein")
+subset(chickwts,subset=feed=="sunflower")
+#based on numerical
+subset(chickwts,subset=weight>300)
+#both
+subset(chickwts,subset=weight>300&feed=="sunflower")
+```
+## contingency tables
+table()
+```{r}
+#explanatory variable
+x <- c("Male", "Male", "Female","Female")
+#response var
+y <- c("yes","yes","yes","no")
+df <- data.frame(x,y)
+str(df)
+table(df)
+table(subset(df,select=c("y","x")))
+```
+# write own function
+```{r}
+# you can use "x" or anything instead of "input"
+my.fun <- function(input){input+1}
+my.fun(2)
+my.fun(1:10)
+input <- 2
+my.fun(input)
+
+my.fun2 <- function(a,b) {a+b}
+my.fun2(a=3,b=4)
+my.fun2(3,4)
+
+my.fun3 <- function(x,y){
+  a <- x^2 
+  b <- a+y 
+  return(b)}
+#case a
+my.fun3(1,2)
+#3
+#case b
+my.fun3(2,1)
+#5
+#case c
+my.fun3(y=2,x=1)
+#3
+
+#standard error
+my.se <- function(x) {
+  sigma <- sd(x) #standard dev
+  n <- length(x)
+  se <- sigma/sqrt(n)
+  return(se)
+}
+x <- 1:100
+my.se(x)
+```
+## aggregate
+```{r}
+d1 <- read.csv("sick_dataset1.csv")
+str(d1)
+my.fun.sick <- function(x){
+  sum(x=="sick")/length(x)
+}
+my.fun.sick(d1$outcome)
+sick.q1 <- aggregate(outcome~sex+treatment, FUN=my.fun.sick, data=d1)
+sick.q1
+
+mdsubset <- subset(d1,subset=sex=="male"&treatment=="drug")
+mdsubset
+my.fun.sick(mdsubset$outcome)
+```
+#plotting
+```{r}
+#create explan
+x <- 1:10
+# gen 10 random num 0-1
+y1 <- runif(10)
+y2 <- runif(10)
+y1
+# pch (plotting character) is point style
+plot(x,y1,col="blue", pch=19, xlim=c(0,10),ylim=c(0,1))
+points(x,y2,col="green",pch=1)
+legend(x=1,y=1,legend=c("y1","y2"),col=c("blue","green"),pch=c("19,1"))
+```
+
+# TASK 1
+```{r}
+d1 <- read.csv("sick_dataset1.csv")
+#1
+str(d1)
+#sex categorical 2, treatment categorical 2, outcome categorical 2
+#2
+table(d1)
+# more males are sick than females and placebo seems significantly less effective in males compared to the real drug, while slightly less effective in females
+#3
+plot(table(d1)) 
+my.f <- function(x) {
+   sum(x=="sick")/length(x)
+}
+#4
+aggregate(outcome~sex+treatment, FUN=my.f, data=d1)
+#5: The drug seems more effective on males.
+```
+# TASK 2
+```{r}
+d2 <- read.csv("sideeffects_dataset2.csv")
+#1
+str(d2)
+# sex= categorical 2, treatment= categorical 10, outcome= categorical 2, side.effects= categorical 2
+#2
+my.f <- function(x) {
+   sum(x=="yes")/length(x)
+}
+a1 <- aggregate(side.effects~sex+treatment, FUN=my.f, data=d2)
+my.f2 <- function(x) {
+   sum(x=="sick")/length(x)
+}
+a2 <- aggregate(outcome~sex+treatment, FUN=my.f2, data=d2)
+a1
+a2
+#3
+mout <- subset(a2, subset=sex=="male")
+mse <- subset(a1, subset=sex=="male")
+par(mfrow = c(1, 2))
+plot(mout$treatment,mout$outcome,type="l",col="blue",xlim=c(0,10),ylim=c(0,1), xlab="dose", ylab="proportion")
+points(mse$treatment,mse$side.effects, type="l",col="red")
+fout <- subset(a2, subset=sex=="female")
+fse <- subset(a1, subset=sex=="male")
+plot(fout$treatment,fout$outcome,type="l",col="blue",xlim=c(0,10),ylim=c(0,1), xlab="dose", ylab="proportion")
+points(fse$treatment,fse$side.effects, type="l",col="red")
+legend(x="topleft",legend=c("sick","sideeffect"),col=c("blue","red"), lty=1)
+#4: for males 5, for females 2
+#5: Yes, going all the way to 7-8 doses in males results in very high side effect so the dose has to be lowered, for females 8-9 might have slightly higher effectiveness, but it would be much better to use 2 doses either way
+```
+
+
+
+
+

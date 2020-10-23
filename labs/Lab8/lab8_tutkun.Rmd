@@ -1,0 +1,227 @@
+---
+title: "Lab8"
+author: "Alp Tutkun"
+date: "4/4/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# coding principles
+## anova
+
+### s1: formulate model for simulated data
+```{r}
+my.df <- data.frame(response=c(rnorm(30,mean=1.1),rnorm(30,mean=1), rnorm(30,mean=2)),treatment=rep(c("T1","T2","T3"),each=30))
+head(my.df)
+str(my.df)
+
+# visualize data w/ boxplot
+boxplot(response~treatment,data=my.df)
+model <- aov(response~treatment,data=my.df)
+```
+
+### s2: check data meet model assumptions of linearity and homoscedasticity, and if resids of model are norm dist 
+```{r}
+par(mfrow=c(2,2))
+plot(model)
+#resid v fitted: linearity - red line flat. homoscedasticity - no wedge in resids
+#normal qq-plot: data following 1:1 line is normal dist
+#scale-location: no obv. trend
+#resids leverage: helps identify influential data pts.
+  #outliest can be influential but not necessarily
+  #some pts in normal range can also be influential
+  #look for pts. at extremes, outside dashed line (cook's dst)
+
+#acf plot checks for autocorrelation
+par(mfrow=c(1,1))
+acf(model$residuals)
+```
+
+### s3: look at model output
+```{r}
+#get anove table
+summary(model)
+```
+interpret: we see significant effect of treatment, but we do not know which levels differ from one another
+
+### s4: post-hoc comparisons
+use tukeyhsd
+```{r}
+mod.tukey <- TukeyHSD(model)
+plot(mod.tukey)
+```
+
+use multcompView to get labels for our treatments. each letter represents group of data with same mean
+```{r}
+#install.packages('multcompView')
+require(multcompView) #tells if package DNE
+str(mod.tukey)
+labels <- multcompLetters(mod.tukey$treatment[,"p adj"])$Letters
+str(labels)
+```
+
+# Activities
+
+## t1: identify promising biological control agents
+```{r}
+d1 <- read.csv("ANOVA_dataset1.csv")
+head(d1)
+levels(d1$treatment)
+levels(d1$treatment) <- c("con","t1","t2","t3","t4") #rename control to con
+```
+
+### 1
+H0: there is no diff. in mean mortality across all treatment and control groups
+Ha: there is a diff. in mean mortality across all treatment and control groups
+
+### 2
+plot data to check assumptions
+-hist() to determine mortality normal dist.
+```{r}
+str(d1)
+hist(d1$mortality) #not normal: extreme skew to low mort vals
+```
+
+### 3
+```{r}
+par(mfrow=c(2,1))
+hist(d1$mortality, main="raw")
+hist(log10(d1$mortality),main="log10")
+```
+transformation necessary, transformed data normal
+
+### 4
+```{r}
+mod1 <- aov(log10(mortality)~treatment,data=d1)
+summary(mod1)
+```
+
+### 6
+
+ans: conducting t-tests between each pair of means would inflate family-wise type I error rate (i.e, alpha), and this inflationary effect increasesd with number of t-tests performed. the more t-tests ran, more likely to get false positive. in contrast, tukey-kramer maintains type I error rate.
+
+### 7
+```{r}
+mod.tukey1 <- TukeyHSD(mod1)
+```
+
+### 8
+```{r}
+par(mfrow=c(1,1))
+plot(mod.tukey1)
+#fig shows diff. in means(x) between pairs of groups (y)
+#error bars 95% ci around true mean diff between treat groups
+```
+interp;
+- error bars 95% ci
+- differences whose CIs overlap 0 indicate group means not statistically diff.
+-ex: mean mort. t4>t3, t2>con
+
+### 9
+```{r}
+require(multcompView)
+```
+
+### 10
+
+```{r}
+labels1 <- multcompLetters(mod.tukey1$treatment[,"p adj"])$Letters
+labels1 <- labels1[order(names(labels1))]
+```
+
+### 11
+```{r}
+means1 <- aggregate(mortality~treatment,mean,data=d1)
+se.fun <- function(x){
+  sd(x)/sqrt(length(x))
+}
+stderrs1 <- aggregate(mortality ~ treatment, FUN = se.fun, data = d1)
+
+bp <- barplot(means1$mortality,names=means1$treatment,ylab="mean mortality of pests", ylim=range(c(0,max(means1$mortality+stderrs1$mortality)+2)))
+arrows(x0=bp,x1=bp,y0=means1$mortality - stderrs1$mortality, y1=means1$mortality + stderrs1$mortality, code=3, angle=90, length=0.1)
+box()
+
+text(x=bp,y=means1$mortality+stderrs1$mortality,labels1,pos=3)
+```
+
+### 12
+interp: both t2 and t4 show greatest mean pest mortality. their mean mort rates were different from the cont t1 and t3 but not diff from one another. (t2 and t4 equally effective at pest control)
+t1 abd t2 appear to eb ineffective biological control agents; their mean mortality rates do not differ from control.
+
+### adv coding q
+```{r}
+#p1
+not.t3 <- subset(d1, !treatment == "t3", drop = FALSE)
+
+#p2
+par(mfrow=c(2,1))
+hist(not.t3$mortality, main="raw")
+hist(log10(not.t3$mortality),main="log10")
+modnt3 <- aov(mortality~treatment,data=not.t3) #not transformed due to answer key error
+summary(modnt3)
+mod.tukeynt3 <- TukeyHSD(modnt3)
+par(mfrow=c(1,1))
+plot(mod.tukeynt3)
+```
+
+## t2: mitig impacts on pest enemies
+```{r}
+d2 <- read.csv("ANOVA_dataset2.csv")
+```
+
+### 1
+```{r}
+mod2 <- aov(log10(mortality) ~ treatment, data = d2)
+par(mfrow=c(2,2))
+plot(mod2)
+summary(mod2)
+```
+interp:yes, there is diff in mean mort of pred/enemy across diff treat groups (p-val<0.05)
+
+### 2
+```{r}
+mod.tukey2 <- TukeyHSD(mod2)
+```
+
+### 3
+```{r}
+par(mfrow=c(1,1))
+means2 <- aggregate(mortality~treatment,mean,data=d2)
+stderrs2 <- aggregate(mortality~treatment,FUN=se.fun,data=d2)
+bp <- barplot(means2$mortality,names=means2$treatment,ylab="mean mort of pest predator/enemy", ylim=range(c(0,max(means2$mortality+stderrs2$mortality)+2)))
+arrows(x0=bp,x1=bp,y0=means2$mortality-stderrs2$mortality,y1=means2$mortality+stderrs2$mortality,code=3,angle=90,length=0.1)
+box()
+
+labels2 <- multcompLetters(mod.tukey2$treatment[,"p adj"])$Letters
+labels2 <- labels2[c("control","t1","t2","t3","t4")]
+text(x=bp,y=means2$mortality+stderrs2$mortality,labels2,pos=3)
+```
+
+### 4
+a is not diff from ab but diff from bc
+
+Mean mortality of the enemy/ predator of the pest was highest for t2
+	
+Mean mortality of the enemy/predator for t1 was not significantly different from that of the control group or t2
+
+### 5
+
+```{r}
+par(mfrow=c(1,2))
+
+bp <- barplot(means2$mortality,names=means2$treatment,ylab="mm pred", ylim=range(c(0,max(means2$mortality+stderrs2$mortality)+2)))
+arrows(x0=bp,x1=bp,y0=means2$mortality-stderrs2$mortality,y1=means2$mortality+stderrs2$mortality,code=3,angle=90,length=0.1)
+box()
+labels2 <- multcompLetters(mod.tukey2$treatment[,"p adj"])$Letters
+labels2 <- labels2[c("control","t1","t2","t3","t4")]
+text(x=bp,y=means2$mortality+stderrs2$mortality,labels2,pos=3)
+
+bp <- barplot(means1$mortality,names=means1$treatment,ylab="mm pests", ylim=range(c(0,max(means1$mortality+stderrs1$mortality)+2)))
+arrows(x0=bp,x1=bp,y0=means1$mortality - stderrs1$mortality, y1=means1$mortality + stderrs1$mortality, code=3, angle=90, length=0.1)
+box()
+text(x=bp,y=means1$mortality+stderrs1$mortality,labels1,pos=3)
+
+# how is b right?
+```
+

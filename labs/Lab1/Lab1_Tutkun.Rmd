@@ -1,0 +1,144 @@
+---
+title: "Lab 1"
+author: "Alp Tutkun"
+date: "17 Jan 20"
+output: html_document
+---
+```{r}
+100+1
+```
+```{r}
+3+5*2
+(3+5)*2
+
+```
+## Built in functions and datasets
+```{r}
+data(cars)
+cars
+str(cars)
+cars$speed
+cars$dist
+mean(cars$speed)
+median(cars$speed)
+var(cars$speed)
+sd(cars$speed)
+sqrt(var(cars$speed))
+?mean
+```
+# this is really big
+## Logical
+### test
+#### test 2
+
+```{r}
+1==2
+# inequality
+1!=0
+1<2
+```
+## Variables simple objects, and assignments
+```{r}
+x<-1
+x=1 #bad practice
+x <- 1
+x
+class(x)
+#strings or chars
+x <- "a"
+x
+class(x)
+x <- TRUE
+class(x)
+my.sum <- 3+5
+my.sum
+sqrt(my.sum)
+log10(my.sum)
+avg.my.sum <- mean(my.sum)
+sqrtsum <- sqrt(my.sum)
+sqrtsum
+
+myreallylongvariablenameistoolong <- 2
+```
+# vectors
+```{r}
+1:5
+2^(1:5)
+c(1,1450,34.23)
+
+
+#ex 11
+#vector with 50-60 storec my.vect
+my.vect <- 50:60
+my.vect
+my.vect[1]
+length(my.vect)
+my.vect[11]
+my.vect[length(my.vect)]
+my.vect[2:5]
+```
+#managing R environment
+```{r}
+ls()
+#rm(my.vect)
+#my.vect
+```
+## data structure and data frames
+### ex 12
+```{r}
+data("chickwts")
+str(chickwts)
+chickwts$feed
+levels(chickwts$feed)
+head(chickwts)
+chickwts$weight
+str(chickwts)
+#levels, ex 13
+levels(chickwts$feed)
+```
+# two numberical variables
+```{r}
+head(cars)
+str(cars)
+#ex 14 scatterplot
+plot(cars$speed,cars$dist)#x,y
+plot(cars$dist~cars$speed)#y as a function of x
+plot(cars$speed,cars$dist,xlab="speed mph",ylab="dist, miles")
+```
+#categorical and numerical data frame
+```{r}
+str(chickwts)
+?aggregate
+aggregate(weight~feed, FUN=mean,data=chickwts)
+```
+#
+```{r}
+plot(weight~feed,data=chickwts)
+plot(chickwts$feed,chickwts$weight)
+```
+```{r}
+data("Titanic")
+str(Titanic)
+Titanic
+mosaicplot(~Sex+Survived,data=Titanic,color=TRUE)
+mosaicplot(~Survived+Sex,data=Titanic,color=TRUE)
+```
+```{r}
+mosaicplot(~Sex+Age+Survived,data=Titanic,color=TRUE)
+```
+```{r}
+Titanic
+#35 boys died
+#17 girls died
+#29 boys, 29 girls survived
+17/(17+28)
+# 0.37778
+35/(29+35)
+# 0.547
+```
+
+
+
+
+
+

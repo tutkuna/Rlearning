@@ -1,0 +1,248 @@
+---
+title: "Assignment 2"
+author: "Alp Tutkun, Kate Mason, Viv Gao, Alexa DelBene"
+
+output: html_document
+---
+
+Instructions
+------------
+
+Please follow the instructions below to complete your assignment:
+
+1. Open the R markdown template **biostatistics-assignmentTemplate.Rmd** in RStudio
+2. Insert the relevant information (i.e., assignment number, names of all students in the group)
+3. Save the file as **assnNUMBER-yourLastNames.Rmd** replacing **NUMBER** with the assignment \# and replacing **yourLastNames** with the last names of all individuals in the Group. For example **assn1-SmithJohnson.Rmd**
+4. Your answers should consist of the R code used to generate the results and their interpretation
+5. Do not use any special symbols such as \%, \#, \$, and \& in your answers
+6. Generate an HTML version of the Markdown document by clicking on the **Knit** icon in RStudio
+7. ONE PERSON in the group: Email an HTML and Markdown version of your completed assignment to your TA
+8. ONE PERSON in the group: Upload the Markdown version of your completed assignment to Turnitin on Blackboard. (Failure to complete this will result in a 10% deduction off your grade.)
+
+### Statement of Author contributions
+
+Things got a bit weird with the whole online class thing, so we completed the assignment all together online using google hangouts. Alp was the one who had the Rmd file and did the actual coding. Kate made big contributions with recognizing what tests needed to be run and directing to times when we used specific code. Vivienne helped with writing code, as well as, providing old code used in previous labs that we could modify for this one. Lexi contributed by providing written answers to questions and provided information regarding specific tests to be run. 
+
+# Problem 1
+---------
+### Question 1
+
+```{r}
+benguela <- read.csv("data/benguela.csv")
+california <- read.csv("data/california.csv")
+canary <- read.csv("data/canary.csv")
+humboldt <- read.csv("data/humboldt.csv")
+
+benguela$period <- ifelse(benguela$year<2025,"before", "after")
+california$period <- ifelse(california$year<2025,"before", "after")
+canary$period <- ifelse(canary$year<2025,"before", "after")
+humboldt$period <- ifelse(humboldt$year<2025,"before", "after")
+```
+
+### Question 2
+
+```{r}
+mean <- rowMeans(subset(benguela, select=c("model1","model2","model3","model4","model5","model6","model7","model8","model9","model10","model11","model12","model13","model14","model15","model16","model17","model18","model19","model20","model21","model22")))
+benf <- data.frame(benguela$year,benguela$period,mean)
+
+mean <- rowMeans(subset(california, select=c("model1","model2","model3","model4","model5","model6","model7","model8","model9","model10","model11","model12","model13","model14","model15","model16","model17","model18","model19","model20","model21","model22")))
+calf <- data.frame(california$year,california$period,mean)
+
+mean <- rowMeans(subset(canary, select=c("model1","model2","model3","model4","model5","model6","model7","model8","model9","model10","model11","model12","model13","model14","model15","model16","model17","model18","model19","model20","model21","model22")))
+canf <- data.frame(canary$year,canary$period, mean)
+
+mean <- rowMeans(subset(humboldt, select=c("model1","model2","model3","model4","model5","model6","model7","model8","model9","model10","model11","model12","model13","model14","model15","model16","model17","model18","model19","model20","model21","model22")))
+humf <- data.frame(humboldt$year,humboldt$period,mean)
+```
+
+### Question 3
+
+```{r}
+shapiro.test(subset(benf,benguela.subset=period=="before")$mean)
+shapiro.test(subset(benf,benguela.subset=period=="after")$mean)
+shapiro.test(subset(calf,subset=california.period=="before")$mean)
+shapiro.test(subset(calf,subset=california.period=="after")$mean)
+shapiro.test(subset(canf,subset=canary.period=="before")$mean)
+shapiro.test(subset(canf,subset=canary.period=="after")$mean)
+shapiro.test(subset(humf,subset=humboldt.period=="before")$mean)
+shapiro.test(subset(humf,subset=humboldt.period=="after")$mean)
+```
+
+Nonparametric tests do not include as many assumptions as parametric tests, but the power of nonparametric tests is low, decreasing the test’s ability to reject the null hypothesis when it is wrong and thus increasing the probability of coming to a false negative (Type II Error).
+
+### Question 4
+
+Sign test, wilcox.test
+H0: median difference in the multimodel mean across periods is 0
+Ha: median difference in the multimodel mean across periods is not 0
+
+```{r}
+wilcox.test(benf$mean)
+wilcox.test(calf$mean)
+wilcox.test(canf$mean)
+wilcox.test(humf$mean)
+```
+
+### Question 5
+
+```{r}
+my.se <- function(x){
+  sd(x)/sqrt(length(x))
+}
+bs1<-subset(x=benf, subset=benguela.period=="before")$mean
+bs2<-subset(x=benf, subset=benguela.period=="after")$mean
+bmb <- mean(bs1)
+bma <- mean(bs2)
+sse1<-my.se(bs1)
+sse2<-my.se(bs2)
+bci.up1<-bmb+1.96*sse1
+bci.up2<-bma-1.96*sse2
+bci.low1<-bmb-1.96*sse1
+bci.low2<-bma+1.96*sse2
+
+ls1<-subset(x=calf, subset=california.period=="before")$mean
+ls2<-subset(x=calf, subset=california.period=="after")$mean
+lmb <- mean(ls1)
+lma <- mean(ls2)
+sse1<-my.se(ls1)
+sse2<-my.se(ls2)
+lci.up1<-lmb+1.96*sse1
+lci.up2<-lma-1.96*sse2
+lci.low1<-lmb-1.96*sse1
+lci.low2<-lma+1.96*sse2
+
+ns1<-subset(x=canf, subset=canary.period=="before")$mean
+ns2<-subset(x=canf, subset=canary.period=="after")$mean
+nmb <- mean(ns1)
+nma <- mean(ns2)
+sse1<-my.se(ns1)
+sse2<-my.se(ns2)
+nci.up1<-nmb+1.96*sse1
+nci.up2<-nma-1.96*sse2
+nci.low1<-nmb-1.96*sse1
+nci.low2<-nma+1.96*sse2
+
+hs1<-subset(x=humf, subset=humboldt.period=="before")$mean
+hs2<-subset(x=humf, subset=humboldt.period=="after")$mean
+hmb <- mean(hs1)
+hma <- mean(hs2)
+sse1<-my.se(hs1)
+sse2<-my.se(hs2)
+hci.up1<-hmb+1.96*sse1
+hci.up2<-hma-1.96*sse2
+hci.low1<-hmb-1.96*sse1
+hci.low2<-hma+1.96*sse2
+
+tab <- cbind(c(bmb,bma),c(lmb,lma),c(nmb,nma),c(hmb,hma))
+
+bp <- barplot(tab,ylim=c(0,1), ylab="means (m^2/s)", main="multimodel avg means", names=c("benguela","california","canary","humboldt"), xlab="location", col=c("blue","green"), beside=TRUE)
+arrows(x0=bp,x1=bp,y0=c(bci.low1,bci.low2,lci.low1,lci.low2,nci.low1,nci.low2,hci.low1,hci.low2),y1=c(bci.up1,bci.up2,lci.up1,lci.up2,nci.up1,nci.up2,hci.up1,hci.up2),angle=90,code=3,length=0.1)
+legend(x=10, y=1,legend = c("before","after"), col = c("blue", "green"), pch=c(19,19))
+```
+
+### Question 6
+
+Looking at our statistical analysis, all of the P-values are less than 0.05, therefore we reject the null hypothesis and can conclude that, based upon the Wilcoxon Sign Test, the median difference in the multimodel mean across periods is not 0. Looking at our barplots, it is clear that the upwellings have increased over time, as the means of the “after” columns appear to be larger at each EBCS. Even the standard errors do not overlap between the “before” and “after” columns, indicating that the means are not the same between them.
+
+# Problem 2
+
+### Question 1
+
+Levene test assumptions:
+Data in each sample is random
+Data in each sample is approximately normal 
+F-test assumptions:
+Data in each sample is random
+Data in each sample is normally distributed
+
+### Question 2
+
+```{r}
+qqnorm(bs1)
+qqline(bs1, col="red")
+
+# approximately normal, use Levene
+
+library(car,quietly=TRUE)
+leveneTest(benf$mean~benf$benguela.period)
+leveneTest(calf$mean~calf$california.period)
+leveneTest(canf$mean~canf$canary.period)
+leveneTest(humf$mean~humf$humboldt.period)
+```
+
+### Question 3
+
+```{r}
+tab <- cbind(c(var(bs1),var(bs2)),c(var(ls1),var(ls2)),c(var(ns1),var(ns2)),c(var(hs1),var(hs2)))
+
+bp <- barplot(tab,ylim=c(0,0.0025), ylab="variance ((m^2/s)^2)", main="multimodel mean variances", names=c("benguela","california","canary","humboldt"), xlab="location", col=c("blue","green"), beside=TRUE)
+legend(x=5, y=0.002,legend = c("before","after"), col = c("blue", "green"), pch=c(19,19))
+```
+
+### Question 4
+
+For three out of the 4 locations (excluding Benguela), there is a significant change in mean variance when comparing upwelling data before and after 2025. The figure shows increasing variance in both the Canary and Humboldt systems, and decreasing variance in the Benguela and California systems. Running a Levene’s test on the mean variance change at all sites before or after 2025, yielded p-values of 0.468 (Benguela), 0.018 (California), 0.0112 (Canary), and 0.0218 (Humboldt), leading us to conclude that variance in upwelling frequency is changing in all studied systems expect Benguela. The trends in the multimodel variance and the multimodel means seem to be quite inconsistent. Looking at the multimodel for the means, every location has a significant increase in mean upwelling after 2025, whereas looking at the multimodel for the variance, only two locations have significantly more upwellings after 2025. Therefore, there is low robustness between the two models.
+
+# Problem 3
+
+### Q1
+
+We must use a One-Sample t-test to analyze the data, as we want to know whether the observed mean migration rate of a normally distributed variable could have occurred by chance, given a hypothetical mean migration rate (2.4 km/year). 
+
+```{r}
+d3 <- read.csv(file = "data/migration.csv")
+head(d3)
+```
+
+### Q2
+
+H0 - The mean migration rate of species on the East and West Coast is equal to 2.4km/hr. 
+Ha - The mean migration rate of species on the East and West coasts is not equal to 2.4 km/hr 
+
+### Q3
+
+```{r}
+t.test(d3$migration,mu=2.4)
+```
+
+p-value = 0.03977<0.05, so we reject the null hypothesis, the mean migration rate is not equal to 2.4km/hr 
+
+### Q4
+
+```{r}
+my.se <- function(x){
+  sd(x)/sqrt(length(x))
+}
+migW<-subset(x=d3, subset=coast=="West")$migration
+migE<-subset(x=d3, subset=coast=="East")$migration
+migWm <- mean(migW)
+migEm <- mean(migE)
+sse1<-my.se(migW)
+sse2<-my.se(migE)
+wci.up<-migWm+1.96*sse1
+eci.up<-migEm-1.96*sse2
+wci.low<-migWm-1.96*sse1
+eci.low<-migEm+1.96*sse2
+
+bp <- barplot(cbind(migWm,migEm),ylim=c(0,5), ylab="migration rate (km/h)", main="migration", names=c("West","East"), xlab="coast", col=c("hotpink","cyan"), beside=TRUE)
+arrows(x0=bp,x1=bp,y0=c(wci.low,eci.low),y1=c(wci.up,eci.up),angle=90,code=3,length=0.1)
+abline(h=2.4,col="firebrick", lty=2, lwd=2)
+```
+
+### Q5
+
+```{r}
+var.test(migW,migE) #, p<0.05, variances not equal so we do Welchs t-test
+#Welch's t-test - assumptions = normal distribution and random sample
+#Ho: The mean migration rates between species on the East and West coasts are equal.
+#Ha: The mean migration rates between species on the East and West coasts are not equal.
+t.test(migW,migE)
+```
+
+fail to reject H0, p>0.05, the mean migration in the two coasts is not significantly different.
+
+### Q6
+
+Looking at the graph, the mean migration rate of West coast species is seen to be greater than the rate of environmental change, as the error bars do not overlap with the 2.4km/hr migration rate line. The mean migration rate of species on the East coast is not observed to be significantly different from the rate of climate migration. However, based on the results from our Welch’s t-test, the mean migration rates between the East and West coasts are not significantly different.
+
+

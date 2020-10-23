@@ -1,0 +1,155 @@
+---
+title: "Assignment 1"
+author: "Alp Tutkun, Kate Mason, Viv Gao, Alexa DelBene"
+
+output: html_document
+---
+
+Instructions
+------------
+
+Please follow the instructions below to complete your assignment:
+
+1. Open the R markdown template **biostatistics-assignmentTemplate.Rmd** in RStudio
+2. Insert the relevant information (i.e., assignment number, names of all students in the group)
+3. Save the file as **assnNUMBER-yourLastNames.Rmd** replacing **NUMBER** with the assignment \# and replacing **yourLastNames** with the last names of all individuals in the Group. For example **assn1-SmithJohnson.Rmd**
+4. Your answers should consist of the R code used to generate the results and their interpretation
+5. Do not use any special symbols such as \%, \#, \$, and \& in your answers
+6. Generate an HTML version of the Markdown document by clicking on the **Knit** icon in RStudio
+7. ONE PERSON in the group: Email an HTML and Markdown version of your completed assignment to your TA
+8. ONE PERSON in the group: Upload the Markdown version of your completed assignment to Turnitin on Blackboard. (Failure to complete this will result in a 10% deduction off your grade.)
+
+# Statement of Author contributions
+The primary coder was Alp he had the R markdown document and has the most coding experience, Vivienne was the second main coder with providing class examples of how to code and also aided in visual design (color coordinator). Lexi answered most short answer questions with proofreading and discussion with Kate. Kate was primary outside of R math person, did math to identify p-values and independence for the first problem.
+
+Problem 1
+---------
+# Question 1
+seasonal flu F1 
+swine flu F2
+P(F2) = 0.0003, P(F1|!F2) =0.001, P(F1|F2) =0.001
+P(F1) = P(F1|!F2)+P(F1|F2)=0.002
+```{r}
+pF2 <- 0.0003 #P(F1)
+pF1nF2 <- 0.001 #P(F1| !F2)
+pF1F2 <- 0.001 #P(F1|F2)
+pF1 <- pF2*pF1F2 + (1-pF2)*pF1nF2 #0.001 P(F1)
+pF1*pF2 == pF2*pF1F2 #true, so independent 
+```
+
+# Question 2
+The independence of the two flu strains would mean that contracting one of the flu strains doesn’t affect contracting the other one. This would suggest that the immune response to the two flu strains are different as the probability of catching one isn’t reliant on catching the other. If the immune response was the same you would expect people who contracted one virus to be more susceptible to the other and thus have a higher probability of contracting it.
+
+# Question 3
+```{r}
+prF2 <- c(0.2,0.4,0.6,0.8)
+pDnF2 <- seq(0.01,0.5, len= 100)
+PDF2 <- 0.7
+pF2D <- matrix(nrow=4, ncol=100)
+bayes <- function(f2,dnf2){
+  (f2*0.7)/(0.7*f2 + (1-f2)*dnf2)
+  }
+for(i in 1:length(prF2)){
+  for(j in 1:length(pDnF2)){
+    pF2D[i,j] <- bayes(prF2[i],pDnF2[j])
+  }
+}
+```
+
+# Question 4
+```{r}
+plot(pDnF2,pF2D[1,],type="l",col="black",main="Rate of True Swine Flu Detection vs. False Detection Rate",xlab="False Detection Rate",ylab="Swine Flu Contraction Rate Given Detection", xlim=c(0,0.55), ylim=c(0,1.05))
+lines(pDnF2,pF2D[2,],col="magenta")
+lines(pDnF2,pF2D[3,],col="aquamarine")
+lines(pDnF2,pF2D[4,],col="darkgoldenrod3")
+abline(h=0.5,untf=FALSE,lty=2)
+legend(0.00,0.45,legend=prF2,title="P(SwineFlu)",lty=1,col=c("black","magenta","aquamarine","darkgoldenrod3"))
+```
+
+# Question 5
+This figure suggests that the effect of the false detection rate increases as the probability of swine flu contraction rate given detection decreases. This effect seems consistent across the swine flu prevalence changes as the top line is the largest probability (0.8) and the bottom line is the smallest probability (0.2). Swine flu prevalence mitigates the effect of false detection rate as you increase the number of people who have the disease the chance of false detection becomes smaller.
+
+# Question 6
+From a clinical perspective, the effectiveness of the detection protocol for the swine flu shows that it is more effective when greater than 50% of the sample population has the swine flu and its detected. When less than this the false detection rates increase and the effectiveness of the test begins to become faultier. Based on our graph the lines indicate that the test is less effective when less than 40% of the population actually has the swine flu.
+
+# Question 7
+```{r}
+pf1v1 <- 0.05
+pf2v1 <- 0.4
+pf2v2 <- 0.05
+pf1v2 <-  c(0.2, 0.4, 0.6, 0.8)
+pv1 <- seq(0.001,1, len= 100)
+pv2 <- 1-pv1
+pf <- matrix(nrow=4, ncol=100)
+for(i in 1:length(pf1v2)){
+  pf[i,] <- pf1v1*pv1 + pf1v2[i]*pv2 +pf2v1*pv1 +pf2v2*pv2
+}
+```
+
+# Question 8
+```{r}
+plot(pv1,pf[1,],col="plum", type="l", ylim=c(0,1),ylab="total prevalence of flu",xlab="pv1 (1-pv2)")
+points(pv1,pf[2,],col="hotpink", type="l")
+points(pv1,pf[3,],col="royalblue2",type="l")
+points(pv1,pf[4,],col="darkseagreen3",type="l")
+legend(0.88,0.35,pf1v2,title="pf1v2",col=c("plum","hotpink","royalblue2","darkseagreen3"), lty=1)
+```
+
+# Question 9
+If prevalence of f1 given v2 is less than or equal to 0.4, use v2 100% of the time, if v2 is less effectie than that, use v1 100% of the time.
+
+Problem 2
+
+# Q1
+Ho: There is no difference in the age groups of people infected with swine flu and those infected with the seasonal flu. 
+Ha: There is a significant difference in the age groups of people infected with swine flu and those infected with the seasonal flu. 
+
+# Q2
+```{r}
+setwd("C:/Users/AlpTutkun/Desktop/R/BiostatsLabAssn1/data") #change depending on own location
+fludata<-read.csv("assn1_dataset1.csv")
+str(fludata)
+head(fludata)
+aggregate(age~flu,FUN=mean,data=fludata) #Swine = 42.7750, Seasonal = 43.3625
+aggregate(age~flu,FUN=range,data=fludata) #Swine = 17-66, Seasonal = 1-85
+```
+The means of the seasonal and swine flu are slightly different, however, on average effect roughly the same mean age with 43.3625 and 42.7750, respectively. The range on the seasonal flu is larger than it is for the swine flu, however, the range of the swine flu is enclosed within the range of the seasonal flu. The range for the seasonal flu is 1-85 and the swine flu is 17-66.
+
+# Q3
+```{r}
+par(mfrow=c(1,2))
+hist(subset(fludata,subset=flu=="swine")$age, xlab="age", ylab="frequency",xlim=c(0,90),col="royalblue2", main="swine")
+hist(subset(fludata,subset=flu=="seasonal")$age, xlab="age", ylab="frequency",xlim=c(0,90),col="darkseagreen2", main="seasonal")
+```
+
+# Q4
+No, the seasonal flu tends to affect larger portions of the population at very young and very old populations, 0-20 and 60-90. While the swine flu tends to affect people more from 10-70 with more even distribution. These are not the same portions of the population.
+
+# Q5
+```{r}
+si <- aggregate(age~flu,FUN=length,data=subset(fludata, age>17 & age<66))
+sii <- aggregate(age~flu,FUN=length,data=subset(fludata, age<18 | age>65))
+df <- data.frame(row.names=si$flu ,adults=si$age,children_and_elderly=sii$age)
+df
+```
+
+# Q6
+```{r}
+mosaicplot(df, main="title", col=TRUE)
+```
+
+The mosaic plot shows that the swine flu tends to dramatically affect more people within the middle-aged adult groups while the seasonal flu affects more people in the children and adults category. This doesn’t support the null hypothesis as it stated that there is no difference in the age groups of people affected between swine and seasonal flu but there is. 
+
+# Q7
+```{r}
+chisq.test(df)
+```
+From the Chi-squared test, we found the p-value to be 2.2e-16, meaning that P<0.05. Therefore, we reject the null hypothesis and can conclude that there is a significant difference in the age groups of people infected with swine flu and those infected with the seasonal flu. 
+
+
+
+
+
+
+
+

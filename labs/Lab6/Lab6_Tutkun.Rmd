@@ -1,0 +1,120 @@
+---
+title: "Lab 6"
+author: "Alp Tutkun"
+date: "2/28/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+## coding principles
+qqplot for normality assumption
+```{r}
+#randomly gen 1000 pts from rand normal dist
+x_norm <- rnorm(1000)
+hist(x_norm)
+qqnorm(x_norm)
+## add theoretical line
+qqline(x_norm,col="red")
+
+# get data from a diff dist
+x_lognorm <- rlnorm(1000)
+hist(x_lognorm)
+qqnorm(x_lognorm)
+qqline(x_lognorm,col="red")
+#log transform this
+x <- log10(x_lognorm)
+qqnorm(x)
+qqline(x,col="blue")
+```
+
+refresh on subset and aggregate
+```{r}
+data("chickwts")
+str(chickwts)
+a <- aggregate(weight~feed, FUN=mean,data=chickwts)
+ms <- subset(x=chickwts,subset=feed=="casein"|feed=="horsebead")
+subset(chickwts,subset=weight>400)
+bp <- barplot(a$weight,xlab="",ylab="mean weight",las=2,ylim=c(0,400),names=a$feed)
+text(x=bp,y=a$weight,c('a','b','c','d','e','f'),pos=3)
+```
+
+# task 1
+H_0 = means of the two groups are equal 
+```{r}
+d1 <- read.csv("ttest_dataset1.csv")
+hist(d1$age) #looks relatively normal
+hist(log10(d1$age)) # looks less normal
+# not transforming is better
+g1 <- subset(d1,subset=treatment=="control")
+g2 <- subset(d1,subset=treatment=="vaccinated")
+t.test(g1$age, g2$age)
+# fail to reject, age does not seem related to treatment
+# Vaccine is not effective (means are the same between treatment and control)
+hist(d1$score) # does not seem to be a normal distribution
+qqnorm(d1$score)
+qqline(d1$score,col="red")  #not normal
+ls <- log10(d1$score)
+qqnorm(ls) 
+qqline(ls,col="red") # seems normal
+t.test(g1$score, g2$score)
+# pval lower than 0.05 so H0 rejected, there is a difference in means between treatment and control
+m1 <- mean(g1$score) #13.01
+m2 <- mean(g2$score) #4.32
+my.se <- function(x){
+  sd(x)/sqrt(length(x))
+}
+se1 <- my.se(g1$score)
+se2 <- my.se(g2$score)
+ci.up1 <- m1+1.96*se1
+ci.low1 <- m1-1.96*se1
+ci.up2 <- m2+1.96*se2
+ci.low2 <- m2-1.96*se2
+
+bp <- barplot(c(m1,m2), ylim=c(0,20), names=c("control","vaccinated"), ylab="HPV score")
+arrows(x0=bp,x1=bp,y0=c(ci.low1,ci.low2),y1=c(ci.up1,ci.up2),angle=90,code=3,length=0.1)
+# The vaccine seems effective
+m1/m2 # control has three times the HPV score on average, so the vaccine seems effective
+d2 <- read.csv("ttest_dataset2.csv")
+cont <- subset(d2,subset=treatment=="control")
+vac <- subset(d2,subset=treatment=="vaccinated")
+cm <- aggregate(score~trial,FUN=mean,data=cont)
+vm <- aggregate(score~trial,FUN=mean,data=vac)
+rat <- cm$score/vm$score
+t.test(rat,mu=m1/m2)
+```
+# task 2
+```{r}
+d3 <- read.csv("ttest_dataset3.csv")
+plot(d3$year,d3$autism)
+plot(d3$year,d3$vaccine)
+# they have a similar curve but anything that has linearly continuously been increasing over the years would have as a similar a curve, correlation does not mean causation
+#choosing not to vaccinate is endangering human life, so we would have to collect data from current anti-vaxxers who already are not vaccinating. control in anti-vaxxer kids vs vaccinated kids and measure autism rates
+d4 <- read.csv("ttest_dataset4.csv")
+ac <- log10(subset(d4,subset=treatment=="control")$autism)
+av <- log10(subset(d4,subset=treatment=="vaccine")$autism)
+par(mfrow=c(1,2))
+qqnorm(ac) # normal when log10d
+qqline(ac,col="red")
+qqnorm(av) # normal when log10d
+qqline(av,col="red")
+t.test(ac,av) # pval greater than 0.05, we fail to reject the hypothesis, the means of control and vaccine are not significantly different
+ac <- subset(d4,subset=treatment=="control")$autism
+av <- subset(d4,subset=treatment=="vaccine")$autism
+mc <- mean(ac)
+mv <- mean(av)
+sec <- my.se(ac)
+sev <- my.se(av)
+ciuc <- mc+1.96*sec
+ciuv <- mv+1.96*sev
+cilc <- mc-1.96*sec
+cilv <- mv-1.96*sev
+par(mfrow=c(1,1))
+bp <- barplot(c(mc,mv), ylim=c(0,20), names=c("control","vaccinated"), ylab="autism score")
+arrows(x0=bp,x1=bp,y0=c(cilc,cilv),y1=c(ciuc,ciuv),angle=90,code=3,length=0.1)
+# they do not differ
+# you are just as likely to get autism as an unvaccinated person as you are vaccinated, correlation does not mean causation
+```
+
+
+
+

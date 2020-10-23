@@ -1,0 +1,158 @@
+---
+title: "lab3"
+author: "Alp Tutkun"
+date: "1/31/2020"
+output: html_document
+---
+```{r}
+data("chickwts")
+str(chickwts)
+head(chickwts)
+
+#matrix
+my.mat <- matrix(1:30,ncol=10,nrow=3)
+my.mat
+#accessing things in df and mats
+chickwts[1,]
+my.mat[1,]
+my.mat[,2]
+my.mat[2,3]
+nrow(chickwts)
+ncol(my.mat)
+```
+#sapply
+```{r}
+data(cars)
+head(cars)
+sapply(cars,FUN=mean)
+sapply(chickwts$weight, FUN=mean) #gives the weights back directly (tries to take the mean of each wt individually)
+```
+#for loops
+```{r}
+for(i in 1:10){print(i)}
+i <- 0
+for(i in 1:10){i}
+i #10
+for(i in 1:nrow(chickwts)){
+  print(chickwts[i,])
+}
+for(i in 10:20){i <- i+1}
+i #21
+```
+#ex 2a calc mean of each col in cars
+#2b use forloop to calc and print mean of each col in cars
+```{r}
+mean(cars[,1])
+mean(cars[,2])
+sapply(cars,FUN=mean)
+for(i in 1:ncol(cars)){
+  print(mean(cars[,i]))
+}
+for(i in cars){
+  print(mean(i)) #weirdly works
+}
+```
+#2c use forloop to calc and print col num and mean for each iter
+```{r}
+for(i in 1:ncol(cars)){
+  print(c(i,mean(cars[,i])))
+}
+```
+#nested loops
+```{r}
+letters <- c("a","b","c","d","e")
+numbers <- 1:5
+for(i in numbers){
+  for(j in letters){
+    combined <- paste(i,j)
+    print(combined)
+  }
+}
+#empty matrix
+out.mat <- matrix(nrow=5,ncol=5)
+for(i in 1:5){
+  for(j in 1:5){
+    out.mat[i,j] <- paste(i,letters[j])
+  }
+}
+out.mat
+for(i in 1:10){
+  for(j in 10:20){
+    print(i+j)
+  }
+}
+```
+#new example: z=10*x^2+sqrt(y)
+```{r}
+x <- seq(0,1,by=0.1)
+y <- seq(0,100,by=20)
+z <- matrix(nrow=length(x),ncol=length(y))
+rownames(z) <- x
+colnames(z) <- y
+for(i in 1:length(x)){
+  for(j in 1:length(y)){
+    z[i,j] <-  10*(x[i]^2)+sqrt(y[j]) 
+  }
+}
+z
+#we can plot
+plot(x,z[,1], type="l", col="black",xlab="x",ylab="z")
+lines(x,z[,2],col="brown")
+lines(x,z[,3],col="red")
+lines(x,z[,4],col="blue")
+legend(0.9,3,y[1:4],title="y",lty=1,col=c("black","brown","red","blue"),cex=0.8)
+```
+#vectorization vs forloops
+```{r}
+input <- 100:110
+output <- numeric(length(input))
+for(i in 1:length(input)){
+  output[i] <- input[i]*5 +1
+}
+output
+input*5+1 #same as output loop
+```
+#conditional
+```{r}
+x <- 10
+if(x>=10){
+  print("x is >=10")
+} else{
+  print("not")
+}
+x <- 4==3
+if(x){
+  print("4=3")
+} 
+#if inside a for
+for(x in 1:10){
+  if(x>5){
+    print(x)
+  } else{
+    print(-1*x)
+  }
+}
+```
+#randomly sampling from distributions
+```{r}
+#normal dist
+x <- rnorm(100,mean=5,sd=1.3)
+hist(x)
+#random uniform dist
+ud <- runif(1000,min=4,max=5)
+hist(ud)
+#binom dist
+bd <- rbinom(1000,size=10,p=0.5)
+hist(bd)
+#binom coef
+choose(4,2)
+#poisson dist
+pd <- rpois(1000,lambda=5)
+```
+
+
+
+
+
+
+

@@ -1,0 +1,151 @@
+---
+title: "Lab4"
+author: "Alp Tutkun"
+date: "2/7/2020"
+output: html_document
+---
+## coding principles
+### Making histograms
+```{r}
+#sample, 100 pts from a random normal dist
+a <- rnorm(100)
+hist(a,main="title",xlab="x label",ylab="y label")
+h <- hist(a)
+h
+```
+### converting numeric to char
+```{r}
+b <- rnorm(1)
+b
+as.character(b)
+st <- as.character(b)
+#extract part of str
+substr(st,start=1,stop=3)
+```
+```{r}
+c <- 10:20
+length(c)
+```
+### binomial test
+10 trials, 5 successes, p=0.5, get P-value for observing values as extreme or more thank k
+```{r}
+n <- 10
+k <- 5
+p <- 0.5
+binom.test(k,n,p)
+choose(10,5)*(p^k)*((1-p)^(n-k))
+```
+## chi squared test
+```{r}
+obs <- 1:10
+exp <- 1:10
+chisq.test(obs,p=exp/sum(exp))
+```
+### other plotting
+make colors transparent: use alpha
+adjustcolor('blue',alpha.f=0.3)
+alpha ranges from 0-1 with 0 transp, 1 opaque
+### barplot instead of hist
+```{r}
+barplot(obs,names=1:10)
+points(exp)
+
+bp <- barplot(obs,names=1:10,ylim=c(0,11))
+points(bp,exp)
+```
+### calc pvals from cont dist with cumulative density function
+```{r}
+#cum dens func
+x1 <- seq(0,10,by=0.1)
+y2 <- pnorm(x1,mean=5,sd=1.3)
+plot(x1,y2,type="l",ylab="cum prob")
+```
+exercise: prove that 1-tail p-value of observing 2 or 8 from this dist are the same, using option lower.tail=false for pnorm
+```{r}
+#for 2
+pnorm(2,mean=5,sd=1.3) 
+#for 8
+pnorm(8,mean=5,sd=1.3, lower.tail=FALSE)
+```
+exercise: p-val of obs 8 from normal dist with mean 5, sd 1.3, 2-tail test
+```{r}
+2*pnorm(8,mean=5,sd=1.3,lower.tail = FALSE)
+```
+# act 
+#task 1
+```{r}
+#21 sprecies
+n <- 21
+k <- 3
+p <- 0.5
+choose(21,3)*(p^k)*((1-p)^(n-k)) # 0.0006341934
+binom.test(k,n,p) # p-value = 0.00149
+binom.test(18,n,p) #  p-value = 0.00149
+```
+#task 2
+```{r}
+d2012 <- read.csv("poll_dataset1.csv")
+first.digit <- substr(as.character(d2012$voted.democrat), start = 1, stop = 1)
+first.digit <- as.numeric(first.digit)
+
+seq(0.5, 9.5, by = 1)
+digit.hist <- hist(first.digit, breaks = seq(0.5, 9.5, by = 1), plot = FALSE)
+obs <- head(digit.hist)$counts
+
+(expected <- log10(1 + 1/(1:9)))
+(expected <- round(expected * length(first.digit))/sum(expected))
+
+bp <- barplot(obs, names=1:9, ylim=c(0,325))
+points(bp, expected)
+#relatively consistent, though more even dist than expected with higher 4 and lower 1,2
+chisq.test(obs,p=expected/sum(expected))
+# the values are significantly different from expected with an extremely small p-value, so there is reasonable doubt of fraud
+```
+#task 3
+```{r}
+# P(Win)
+pW= 0.5
+# P(Favored|Win)
+pF.W= 0.75
+# P(Favored|Loss)
+pF.L=0.2
+# P(Favored)
+pF= pF.W*pW+pF.L*(1-pW)
+# P(Win|Favored)
+pW.F= pF.W*pW/pF # 79% win, article would say the dem cand is exp to win
+
+pF.W=0.75
+pF.L=0.2
+pWvals=seq(0, 1, length=100)
+pFvals=pF.W*pWvals+pF.L*(1-pWvals)
+pW.Fvals <- pF.W*pWvals/pFvals
+
+plot(pWvals,pW.Fvals,ylab="P(W|F)",xlab="P(W)",type="l", col="blue")
+abline(b=1, a=0)
+#the blue line always seems to be above black
+```
+#task4
+```{r}
+pop <- d2012$population.size
+hist(pop) #right skewed
+skew <- function(x) {
+  result <- (1/length(x)) * sum(((x-mean(x))/sd(x))^3)
+  return(result)
+}
+skew(pop) #1.134869 right skew
+mean(pop) #997.817
+median(pop) #859
+demPer <- d2012$voted.democrat/d2012$population.size*100
+repPer <- d2012$voted.republican/d2012$population.size*100
+hist(demPer, col=adjustcolor("blue", alpha=0.3), main="2012", xlab="percentage")
+par(new=TRUE)
+hist(repPer, col=adjustcolor("red", alpha=0.3), main="", xlab="", axes=F)
+# democrats had higher percentage of voters more frequently
+```
+
+
+
+
+
+
+
